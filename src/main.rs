@@ -1,13 +1,13 @@
+use clap::Parser;
 use std::path::PathBuf;
 use std::process::exit;
-use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 /// Simple processor of transactions
 /// Processes transactions in the input file and returns the account status after processing
 struct Args {
-    input_filepath: PathBuf
+    input_filepath: PathBuf,
 }
 
 fn main() {
