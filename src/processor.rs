@@ -5,14 +5,7 @@ use itertools::Itertools;
 
 use crate::models::{ClientId, ClientSummary, Transaction, TransactionId, TransactionType};
 
-#[derive(PartialEq)]
-enum TransactionStatus {
-    Processed,
-    UnderDispute,
-    ChargeBack,
-}
-
-// To ensure 4 digits precision, internally the calculations are using rounded integers
+/// To ensure 4 digits precision, internally the calculations are using rounded integers
 type AmountType = i64;
 const PRECISION: f64 = 10000.0;
 fn f64_to_amount_type(v: f64) -> AmountType {
@@ -23,16 +16,32 @@ fn amount_type_to_f64(v: AmountType) -> f64 {
     (v as f64) / PRECISION
 }
 
+/// Struct representing details of the transaction in client history
 struct TransactionRecord {
     amount: AmountType,
     status: TransactionStatus,
 }
+
+#[derive(PartialEq)]
+/// Describes status of the transaction in user history
+enum TransactionStatus {
+    /// Transaction was successful and is valid, the founds are in available
+    Processed,
+    /// Transaction is under dispute, the founds are in held
+    UnderDispute,
+    /// Transaction is charged back, the transaction is ignored in held/total but client account is frozen
+    ChargeBack,
+}
+
 #[derive(Default)]
+/// ClientData contains current user state
 struct ClientData {
+    /// All transactions already processed by user in their current state
     transactions_history: HashMap<TransactionId, TransactionRecord>,
 }
 
 impl ClientData {
+    /// Returns the available founds
     fn available(&self) -> f64 {
         amount_type_to_f64(
             self.transactions_history
@@ -43,6 +52,7 @@ impl ClientData {
         )
     }
 
+    /// Returns the held founds (under dispute)
     fn held(&self) -> f64 {
         amount_type_to_f64(
             self.transactions_history
@@ -53,6 +63,7 @@ impl ClientData {
         )
     }
 
+    /// Returns true if there is at least one transaction with `TransactionStatus::ChargeBack` status
     fn locked(&self) -> bool {
         self.transactions_history
             .values()
@@ -66,6 +77,7 @@ pub(crate) struct TransactionsProcessor {
 }
 
 #[derive(Debug, PartialEq, thiserror::Error)]
+/// Error type from processing the transactions
 pub(crate) enum TransactionProcessError {
     #[error("Not enough founds")]
     NotEnoughFoundsAvailable,
