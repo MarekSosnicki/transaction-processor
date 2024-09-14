@@ -24,6 +24,16 @@ fn process_transactions_single_client_deposits_test() {
 }
 
 #[test]
+// Multiple transactions to check precision of calculations
+fn precision_check() {
+    let result = process_transactions(test_directory().join("precision_check.csv")).unwrap();
+
+    let expected = "client,available,held,total,locked\n\
+    1,0.0,0.0,0.0,false\n";
+    assert_eq!(result, expected)
+}
+
+#[test]
 fn process_multiple_users_all_types_of_transactions_test() {
     // This test has 4 client
     // Client1: Deposits some founds then tries to withdraw too much (account balance not negative)

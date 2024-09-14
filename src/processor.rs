@@ -11,8 +11,20 @@ enum TransactionStatus {
     UnderDispute,
     ChargeBack,
 }
+
+// To ensure 4 digits precision, internally the calculations are using rounded integers
+type AmountType = i64;
+const PRECISION: f64 = 10000.0;
+fn f64_to_amount_type(v: f64) -> AmountType {
+    (v * PRECISION).round() as AmountType
+}
+
+fn amount_type_to_f64(v: AmountType) -> f64 {
+    (v as f64) / PRECISION
+}
+
 struct TransactionRecord {
-    amount: f64,
+    amount: AmountType,
     status: TransactionStatus,
 }
 #[derive(Default)]
@@ -22,19 +34,23 @@ struct ClientData {
 
 impl ClientData {
     fn available(&self) -> f64 {
-        self.transactions_history
-            .values()
-            .filter(|t| t.status == TransactionStatus::Processed)
-            .map(|record| record.amount)
-            .sum()
+        amount_type_to_f64(
+            self.transactions_history
+                .values()
+                .filter(|t| t.status == TransactionStatus::Processed)
+                .map(|record| record.amount)
+                .sum(),
+        )
     }
 
     fn held(&self) -> f64 {
-        self.transactions_history
-            .values()
-            .filter(|t| t.status == TransactionStatus::UnderDispute)
-            .map(|record| record.amount)
-            .sum()
+        amount_type_to_f64(
+            self.transactions_history
+                .values()
+                .filter(|t| t.status == TransactionStatus::UnderDispute)
+                .map(|record| record.amount)
+                .sum(),
+        )
     }
 
     fn locked(&self) -> bool {
@@ -105,7 +121,7 @@ impl TransactionsProcessor {
                 client_entry.transactions_history.insert(
                     transaction.transaction_id,
                     TransactionRecord {
-                        amount,
+                        amount: f64_to_amount_type(amount),
                         status: TransactionStatus::Processed,
                     },
                 );
@@ -126,7 +142,7 @@ impl TransactionsProcessor {
                 client_entry.transactions_history.insert(
                     transaction.transaction_id,
                     TransactionRecord {
-                        amount: -amount,
+                        amount: f64_to_amount_type(-amount),
                         status: TransactionStatus::Processed,
                     },
                 );
@@ -138,7 +154,7 @@ impl TransactionsProcessor {
                     .ok_or(TransactionProcessError::TransactionNotFound)?;
                 (entry.status == TransactionStatus::Processed)
                     .ok_or(TransactionProcessError::TransactionAlreadyUnderDispute)?;
-                (entry.amount > 0.0).ok_or(TransactionProcessError::CannotDisputeWithdrawal)?;
+                (entry.amount > 0).ok_or(TransactionProcessError::CannotDisputeWithdrawal)?;
                 entry.status = TransactionStatus::UnderDispute
             }
             TransactionType::Resolve => {
