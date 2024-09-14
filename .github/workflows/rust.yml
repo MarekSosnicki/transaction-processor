@@ -15,12 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Run clippy
-      run: cargo clippy --tests
-    - name: Run fmt
-      run: cargo fmt --check 
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Run clippy
+        run: cargo clippy --tests
+      - name: Run fmt
+        run: cargo fmt --check
+      - name: Run with test data
+        run: cargo run -- test_cases/multiple_users_all_types_of_transactions.csv > test_cases\expected_multiple_users_all_types_of_transactions.csv
+      - name: Validate that run returned expected output
+        run: git diff HEAD HEAD~1 --no-patch --exit-code test_cases\expected_multiple_users_all_types_of_transactions.csv
