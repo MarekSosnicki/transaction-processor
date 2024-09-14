@@ -7,6 +7,7 @@ pub(crate) enum TransactionType {
     Withdrawal,
     Dispute,
     Resolve,
+    Chargeback,
 }
 
 pub(crate) type ClientId = u64;
@@ -19,10 +20,10 @@ pub(crate) struct Transaction {
     pub(crate) client: ClientId,
     #[serde(rename = "tx")]
     pub(crate) transaction_id: TransactionId,
-    pub(crate) amount: f64,
+    pub(crate) amount: Option<f64>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub(crate) struct ClientSummary {
     pub(crate) client: ClientId,
     pub(crate) available: f64,

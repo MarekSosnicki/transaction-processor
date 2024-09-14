@@ -1,12 +1,15 @@
-mod models;
-
-use crate::models::{ClientId, ClientSummary, Transaction};
-use anyhow::Context;
-use csv::{ReaderBuilder, Trim, WriterBuilder};
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+
+use anyhow::Context;
+use csv::{ReaderBuilder, Trim, WriterBuilder};
+
+use crate::models::{ClientSummary, Transaction};
+use crate::processor::TransactionsProcessor;
+
+mod models;
+mod processor;
 
 pub fn process_transactions(filename: impl AsRef<Path>) -> anyhow::Result<String> {
     let f = File::open(filename).context("Failed to open input file")?;
@@ -15,26 +18,14 @@ pub fn process_transactions(filename: impl AsRef<Path>) -> anyhow::Result<String
         .has_headers(true)
         .from_reader(BufReader::new(f));
 
-    let mut clients: HashMap<ClientId, ClientSummary> = Default::default();
-
+    let mut processor = TransactionsProcessor::default();
     for record in reader.deserialize() {
         let transaction: Transaction = record.context("Failed to deserialize transaction")?;
-
-        let entry = clients
-            .entry(transaction.client)
-            .or_insert_with(|| ClientSummary {
-                client: transaction.client,
-                available: 0.0,
-                held: 0.0,
-                total: 0.0,
-                locked: false,
-            });
-
-        entry.available += transaction.amount;
-        entry.total += transaction.amount;
+        // The errors from transactions are ignored in this function as if transaction has never happened
+        let _ = processor.process(&transaction);
     }
 
-    into_csv(clients.values().cloned().collect())
+    into_csv(processor.summary())
 }
 
 fn into_csv(all_summaries: Vec<ClientSummary>) -> anyhow::Result<String> {
@@ -47,7 +38,7 @@ fn into_csv(all_summaries: Vec<ClientSummary>) -> anyhow::Result<String> {
         for summary in all_summaries {
             writer
                 .serialize(summary)
-                .context("Failed to write summary record")?
+                .context("Failed to write summary record")?;
         }
         let data = String::from_utf8(
             writer
