@@ -23,6 +23,10 @@ To run tests use the following command:
 cargo test
 ```
 
+## Logs
+
+The logs can be found in `transaction-processor-logs.log` file after running the application.
+
 ## Examples
 
 You can find example inputs and outputs in the `test_data` directory.

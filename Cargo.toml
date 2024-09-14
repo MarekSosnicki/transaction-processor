@@ -11,3 +11,5 @@ serde = { version = "1", features = ["derive"] }
 csv = "1"
 itertools = "0.13"
 thiserror = "1.0.63"
+simple-logging = "2"
+log = "0.4.22"

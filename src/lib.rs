@@ -4,6 +4,7 @@ use std::path::Path;
 
 use anyhow::Context;
 use csv::{ReaderBuilder, Trim, WriterBuilder};
+use log::{error, info};
 
 use crate::models::{ClientSummary, Transaction};
 use crate::processor::TransactionsProcessor;
@@ -22,7 +23,17 @@ pub fn process_transactions(filename: impl AsRef<Path>) -> anyhow::Result<String
     for record in reader.deserialize() {
         let transaction: Transaction = record.context("Failed to deserialize transaction")?;
         // The errors from transactions are ignored in this function as if transaction has never happened
-        let _ = processor.process(&transaction);
+        match processor.process(&transaction) {
+            Ok(()) => {
+                info!("Successfully processed transaction {:?}", transaction)
+            }
+            Err(err) => {
+                error!(
+                    "Failed to process transaction {:?}, error: {}",
+                    transaction, err
+                )
+            }
+        }
     }
 
     into_csv(processor.summary())
