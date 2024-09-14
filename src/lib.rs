@@ -17,6 +17,7 @@ pub fn process_transactions(filename: impl AsRef<Path>) -> anyhow::Result<String
     let mut reader = ReaderBuilder::new()
         .trim(Trim::All)
         .has_headers(true)
+        .flexible(true)
         .from_reader(BufReader::new(f));
 
     let mut processor = TransactionsProcessor::default();

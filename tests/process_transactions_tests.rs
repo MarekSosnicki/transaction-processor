@@ -34,6 +34,58 @@ fn precision_check() {
 }
 
 #[test]
+fn process_single_client_deposits_and_withdrawals_test() {
+    let result =
+        process_transactions(test_directory().join("single_client_deposits_and_withdrawals.csv"))
+            .unwrap();
+
+    let expected = fs::read_to_string(
+        test_directory().join("expected_single_client_deposits_and_withdrawals.csv"),
+    )
+    .unwrap()
+    // Hack for windows
+    .replace("\r\n", "\n");
+    assert_eq!(result, expected)
+}
+
+#[test]
+fn process_single_client_dispute_test() {
+    let result = process_transactions(test_directory().join("single_client_dispute.csv")).unwrap();
+
+    let expected = fs::read_to_string(test_directory().join("expected_single_client_dispute.csv"))
+        .unwrap()
+        // Hack for windows
+        .replace("\r\n", "\n");
+    assert_eq!(result, expected)
+}
+
+#[test]
+fn process_single_client_dispute_chargeback_test() {
+    let result =
+        process_transactions(test_directory().join("single_client_dispute_chargeback.csv"))
+            .unwrap();
+
+    let expected =
+        fs::read_to_string(test_directory().join("expected_single_client_dispute_chargeback.csv"))
+            .unwrap()
+            // Hack for windows
+            .replace("\r\n", "\n");
+    assert_eq!(result, expected)
+}
+
+#[test]
+fn process_single_client_dispute_resolved_test() {
+    let result =
+        process_transactions(test_directory().join("single_client_dispute_resolved.csv")).unwrap();
+
+    let expected =
+        fs::read_to_string(test_directory().join("expected_single_client_dispute_resolved.csv"))
+            .unwrap()
+            // Hack for windows
+            .replace("\r\n", "\n");
+    assert_eq!(result, expected)
+}
+#[test]
 fn process_multiple_users_all_types_of_transactions_test() {
     // This test has 4 client
     // Client1: Deposits some founds then tries to withdraw too much (account balance not negative)
